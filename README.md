@@ -1,4 +1,4 @@
-# s0str
+# søstr
 A private nostr relay
 
 # Why
