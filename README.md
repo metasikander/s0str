@@ -10,3 +10,15 @@ but let anyone request the notes that it has saved.
 
 The software will accept settings from a file or enviromental variables, and be connected to a postgresql database.  
 
+# TODO
+
+* data types
+* data storage
+* pub key config
+* WS
+
+# Links 
+
+[protocoll](https://github.com/nostr-protocol/nips/blob/master/01.md)\
+[example](https://github.com/fiatjaf/relayer)\
+[lib](https://github.com/fiatjaf/go-nostr)
