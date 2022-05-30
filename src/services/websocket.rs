@@ -9,9 +9,11 @@ use tokio::net::TcpListener;
 use tokio::net::TcpStream;
 use crate::types::nostr::protocol::ProtocolData;
 use crate::types::nostr::protocol::Protocol;
-
 use crate::CONFIG;
 
+//-////////////////////////////////////////////////////////////////////////////
+//  Websocket Listener
+//-////////////////////////////////////////////////////////////////////////////
 pub async fn run_ws_listener(db: DbConn) {
     let listener = TcpListener::bind(CONFIG.server_addr).await.unwrap();
 
@@ -21,6 +23,10 @@ pub async fn run_ws_listener(db: DbConn) {
         tokio::spawn(handle_connection(ws_stream, client_addr, db.clone()));
     }
 }
+
+//-////////////////////////////////////////////////////////////////////////////
+//  Connection Handler
+//-////////////////////////////////////////////////////////////////////////////
 
 /// Handles received connection
 async fn handle_connection(stream: TcpStream, client_addr: SocketAddr, db: DbConn) {
@@ -47,6 +53,10 @@ async fn handle_connection(stream: TcpStream, client_addr: SocketAddr, db: DbCon
     println!(" -- {} disconnected --", &client_addr);
 }
 
+//-////////////////////////////////////////////////////////////////////////////
+//  Request Handler
+//-////////////////////////////////////////////////////////////////////////////
+
 /// Handles client post request
 async fn handle_post() {
 
@@ -56,3 +66,6 @@ async fn handle_post() {
 fn handle_fetch() {
 
 }
+//-////////////////////////////////////////////////////////////////////////////
+//
+//-////////////////////////////////////////////////////////////////////////////
