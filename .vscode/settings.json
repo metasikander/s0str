@@ -1,11 +1,16 @@
 {
     "cSpell.words": [
         "chrono",
+        "Deque",
         "dotenv",
         "nostr",
         "pubkey",
         "repr",
         "søstr",
         "tungstenite"
-    ]
+    ],
+    "rust-analyzer.diagnostics.enableExperimental": false,
+    "rust-analyzer.assist.importEnforceGranularity": true,
+    "rust-analyzer.assist.importGranularity": "item",
+    "rust-analyzer.assist.importPrefix": "crate"
 }

@@ -1,3 +1,4 @@
+use std::collections::VecDeque;
 use serde::Deserialize;
 use serde::Serialize;
 use crate::types::nostr::filter::Filter;
@@ -7,16 +8,17 @@ use crate::types::nostr::event::Event;
 //  Raw Protocol
 //-////////////////////////////////////////////////////////////////////////////
 #[derive(PartialEq, Clone, Copy, Debug, Deserialize, Serialize)]
-pub enum MsgType {
+pub enum ProtocolCategory {
     EVENT,
     REQ,
     CLOSE,
+    NOTICE,
 }
 
 #[derive(PartialEq, Clone, Debug, Deserialize, Serialize)]
 #[serde(untagged)]
 pub enum ProtocolData {
-    MsgType(MsgType),
+    MsgType(ProtocolCategory),
     SubscriptionID(String),
     Event(Event),
     Filter(Filter),
@@ -32,52 +34,56 @@ pub enum Protocol {
 }
 
 impl Protocol {
-    pub fn from_data(data: Vec<ProtocolData>) -> Result<Protocol, &'static str> {
-        if let ProtocolData::MsgType(msg) = data[0].clone() {
-            println!("----------------------------------------------");
-            println!("type: {:?}, nr2: {:?}", &data[0], &data[1]);
-            return match msg {
-                MsgType::EVENT => Protocol::from_event(data),
-                MsgType::REQ => Protocol::from_request(data),
-                MsgType::CLOSE => Protocol::from_close(data),
-            }
-        } else {
-            Err("Could not decode protocol")
+    pub fn from_data(mut data: VecDeque<ProtocolData>) -> Result<Protocol, &'static str> {
+        match data.pop_front().unwrap() {
+            ProtocolData::MsgType(msg) => match match msg {
+                ProtocolCategory::NOTICE => None,
+                ProtocolCategory::EVENT  => Protocol::from_event(data),
+                ProtocolCategory::REQ    => Protocol::from_request(data),
+                ProtocolCategory::CLOSE  => Protocol::from_close(data),
+            } {
+                None => Err("Could not decode event"),
+                Some(protocol) => Ok(protocol)
+            },
+            _ => Err("Could not decode protocol"),
         }
     }
 
-    fn from_event(data: Vec<ProtocolData>) -> Result<Protocol, &'static str> {
-        if let ProtocolData::Event(event) = data[1].clone() {
-            Ok(Protocol::Event(event))
+    fn from_event(mut data: VecDeque<ProtocolData>) -> Option<Protocol> {
+        if let ProtocolData::Event(event) = data.pop_front().unwrap() {
+            Some(Protocol::Event(event))
         } else {
-            Err("Could not decode event")
+            None
         }
     }
 
-    fn from_request(data: Vec<ProtocolData>) -> Result<Protocol, &'static str> {
-        let id: String = if let ProtocolData::SubscriptionID(id) = data[1].clone() {
-            id
+    fn from_request(mut data: VecDeque<ProtocolData>) -> Option<Protocol> {
+        let sub_id: String = if let ProtocolData::SubscriptionID(sub_id) = data.pop_front().unwrap() {
+            Some(sub_id)
         } else {
-            return Err("Could not decode request");
-        };
+            None
+        }?;
 
-        let mut filters: Vec<Filter> = vec![];
-        for entry in &data[2..] {
-            if let ProtocolData::Filter(filter) = entry {
-                filters.push(filter.clone());
-            } else {
-                return Err("Could not decode request");
-            }
-        }
+        let filters: Vec<Filter> = data.into_iter()
+            .fold(Some(vec![]), |acc, entry| match acc {
+                None => None,
+                Some(mut acc) => match entry {
+                    ProtocolData::Filter(filter) => {
+                        acc.push(filter);
+                        Some(acc)
+                    },
+                    _ => None,
+                }
+            })?;
 
-        Ok(Protocol::Request{ sub_id: id, filters: filters })
+        Some(Protocol::Request{ sub_id, filters })
     }
 
-    fn from_close(data: Vec<ProtocolData>) -> Result<Protocol, &'static str> {
-        if let ProtocolData::SubscriptionID(id) = data[1].clone() {
-            Ok(Protocol::Close { sub_id: id })
+    fn from_close(mut data: VecDeque<ProtocolData>) -> Option<Protocol> {
+        if let ProtocolData::SubscriptionID(sub_id) = data.pop_front().unwrap() {
+            Some(Protocol::Close { sub_id })
         } else {
-            return Err("Could not decode close");
+            None
         }
     }
 }

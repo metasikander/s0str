@@ -1,7 +1,4 @@
 //-////////////////////////////////////////////////////////
-mod functions {
-    pub mod config;
-}
 mod services {
     pub mod database;
     pub mod websocket;
@@ -19,7 +16,7 @@ mod types {
 //-////////////////////////////////////////////////////////
 use static_init::dynamic;
 use tokio::io::Result;
-use crate::functions::config::init_config;
+use tracing_subscriber::FmtSubscriber;
 use crate::services::websocket::run_ws_listener;
 use crate::types::config::Config;
 use crate::services::database::init_database;
@@ -29,15 +26,24 @@ use crate::services::database::init_database;
 //-////////////////////////////////////////////////////////////////////////////
 
 #[dynamic]
-static CONFIG: Config = init_config();
+static CONFIG: Config = Config::init();
 
 //-////////////////////////////////////////////////////////////////////////////
 //  Main
 //-////////////////////////////////////////////////////////////////////////////
 #[tokio::main]
 pub async fn main() -> Result<()> {
+    // logger
+    FmtSubscriber::builder()
+        .with_max_level(CONFIG.debug_lvl)
+        .init();
+
+    // database
     let db = init_database().await.unwrap();
+
+    // websocket
     run_ws_listener(db).await;
+
     Ok(())
 }
 //-////////////////////////////////////////////////////////////////////////////
