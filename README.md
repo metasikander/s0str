@@ -13,6 +13,7 @@ The software will accept settings from a file or environmental variables, and be
 # TODO
 
 * filter on e and p tags
+* error response message when non pubkey user tries to post
 
 # Links
 
