@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  s0str:
+    build: .
+    container_name: s0ster
+    environment:
+      debug_level: DEBUG
+      port: 8080
+      pubkey: "d66f63fe2d946e8a02dda5f35d3f14808c59cd2a9df1a64803ffe6e19c1f1b0d"
+    ports:
+      - 8080:8080
+    # volumes:
+    #   - ./.env:/.env

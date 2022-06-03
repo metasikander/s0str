@@ -8,6 +8,7 @@ members = [".", "entity", "migration"]
 
 [dependencies]
 chrono = "=0.4.18"
+default-net = "0.11.0"
 dotenv = "0.15.0"
 futures = "0.3.2"
 futures-channel = "0.3"

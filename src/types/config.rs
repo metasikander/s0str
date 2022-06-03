@@ -1,6 +1,8 @@
 use std::env;
+use std::net::IpAddr;
 use std::net::SocketAddr;
 use std::str::FromStr;
+use default_net::get_default_interface;
 use dotenv::dotenv;
 use tracing::Level;
 
@@ -15,7 +17,7 @@ pub struct Config {
 
 impl Config {
     pub fn init() -> Config {
-        dotenv().ok().unwrap();
+        dotenv().ok();
 
         Config {
             debug_lvl: {
@@ -30,9 +32,16 @@ impl Config {
                 env::var(key).expect(&missing_variable(key))
             },
             server_addr: {
-                let key = "server_addr";
-                let value = env::var(key).expect(&missing_variable(key));
-                value.parse().expect(&invalid(value))
+                let key = "port";
+                let port: u16 = match env::var(key) {
+                    Err(_) => 0,
+                    Ok(value) => value.parse().expect(&invalid(value)),
+                };
+                let interface = get_default_interface().unwrap();
+                for n in &interface.ipv4 {
+                    dbg!(n.addr);
+                }
+                SocketAddr::new(IpAddr::V4(interface.ipv4.first().expect("No network configured").addr), port)
             },
         }
     }
