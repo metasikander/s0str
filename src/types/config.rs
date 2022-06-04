@@ -38,9 +38,6 @@ impl Config {
                     Ok(value) => value.parse().expect(&invalid(value)),
                 };
                 let interface = get_default_interface().unwrap();
-                for n in &interface.ipv4 {
-                    dbg!(n.addr);
-                }
                 SocketAddr::new(IpAddr::V4(interface.ipv4.first().expect("No network configured").addr), port)
             },
         }
