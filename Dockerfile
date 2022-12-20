@@ -1,5 +1,5 @@
 # --- Builder -----------------------------------------------------------------
-FROM rust:alpine as builder
+FROM docker.io/library/rust:alpine as builder
 
 # - Build cache ---
 run apk upgrade \
@@ -20,7 +20,7 @@ COPY ./src/ ./src/
 RUN cargo build --release
 
 # --- Executioner -------------------------------------------------------------
-FROM alpine:latest
+FROM docker.io/library/rust:alpine
 
 COPY --from=builder /usr/src/s0str/target/release/s0str /usr/local/bin/
 
