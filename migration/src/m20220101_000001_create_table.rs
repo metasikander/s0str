@@ -20,7 +20,7 @@ impl MigrationTrait for Migration {
                 .col(ColumnDef::new(event::Column::Id).string_len(65).primary_key())
                 .col(ColumnDef::new(event::Column::Pubkey).string_len(65).not_null())
                 .col(ColumnDef::new(event::Column::CreatedAt).big_integer().not_null())
-                .col(ColumnDef::new(event::Column::Kind).tiny_unsigned().not_null())
+                .col(ColumnDef::new(event::Column::Kind).small_integer().not_null())
                 .col(ColumnDef::new(event::Column::Content).text().not_null())
                 .col(ColumnDef::new(event::Column::Sig).string_len(129).not_null())
                 .to_owned()

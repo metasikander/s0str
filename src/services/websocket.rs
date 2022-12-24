@@ -8,8 +8,6 @@ use tokio_tungstenite::accept_async;
 use tokio_tungstenite::tungstenite::Message;
 use tokio::net::TcpListener;
 use tokio::net::TcpStream;
-use tracing::debug;
-use tracing::info;
 use crate::CONFIG;
 use crate::types::nostr::event::Event;
 use crate::types::nostr::filter::Filter;
@@ -21,9 +19,10 @@ use crate::types::nostr::protocol::ProtocolData;
 //  Websocket Listener
 //-////////////////////////////////////////////////////////////////////////////
 pub async fn run_ws_listener(db: DbConn) {
-    let listener = TcpListener::bind(CONFIG.server_addr).await.unwrap();
+    info!("-- INIT Web Socket --");
+    let listener = TcpListener::bind(CONFIG.web_socket_addr).await.unwrap();
 
-    info!("websocket listening at: '{}'", CONFIG.server_addr);
+    info!("websocket listening at: '{}'", CONFIG.web_socket_addr);
 
     while let Ok((ws_stream, client_addr)) = listener.accept().await {
         tokio::spawn(handle_connection(client_addr, ws_stream, db.clone()));
@@ -37,17 +36,23 @@ pub async fn run_ws_listener(db: DbConn) {
 /// Handles received connection
 async fn handle_connection(client: SocketAddr, stream: TcpStream, db: DbConn) {
     info!(" -- {} connected --", &client);
-    let mut ws_stream = accept_async(stream).await.expect("Handshake error!");
+    let mut ws_stream = match accept_async(stream).await {
+        Err(err) => {warn!("WS handshake error: {}", err); return},
+        Ok(stream) => stream,
+    };
 
     while let Some(msg) = ws_stream.next().await {
         match msg.unwrap() {
             Message::Text(text) => {
-                let raw: VecDeque<ProtocolData> = serde_json::from_str(&text).unwrap();
+                let raw: VecDeque<ProtocolData> = match serde_json::from_str(&text) {
+                    Err(err) => {warn!{"WS parse data error: {}", err}; return},
+                    Ok(data) => data,
+                };
                 match Protocol::from_data(raw) {
                     Err(err) => {ws_stream.send(Message::Text(serde_json::to_string(&(ProtocolCategory::NOTICE, err)).unwrap())).await.unwrap();},
                     Ok(protocol) => match protocol {
                         Protocol::Event(event) => {
-                            debug!("{} --> {:?}", &client, &event);
+                            info!("{} --> {:?}", &client, &event);
                             handle_event(event, &db).await;
                         },
                         Protocol::Request{sub_id, filters} => {
