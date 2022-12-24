@@ -11,7 +11,7 @@ pub struct Model {
     pub id: String,
     pub pubkey: String,
     pub created_at: i64,
-    pub kind: u8,
+    pub kind: i16,
     pub content: String,
     pub sig: String,
 }

@@ -20,7 +20,7 @@ pub struct Model {
 #[derive(Debug, Clone, Copy, PartialEq, EnumIter, DeriveActiveEnum, Deserialize, Serialize)]
 #[sea_orm(rs_type = "String", db_type = "String(Some(1))")]
 pub enum TagType {
-    #[sea_orm(string_value = "")]
+    #[sea_orm(string_value = "N")]
     #[serde(rename = "")]
     None,
     #[sea_orm(string_value = "e")]

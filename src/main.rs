@@ -1,6 +1,8 @@
+#[macro_use]
+extern crate tracing;
+
 //-////////////////////////////////////////////////////////
 mod services {
-    pub mod database;
     pub mod websocket;
 }
 mod types {
@@ -14,18 +16,22 @@ mod types {
     }
 }
 //-////////////////////////////////////////////////////////
-use static_init::dynamic;
+
+use migration::Migrator;
+use migration::MigratorTrait;
+use sea_orm::ConnectOptions;
+use sea_orm::Database;
 use tokio::io::Result;
 use tracing_subscriber::FmtSubscriber;
+use tracing::log::LevelFilter;
 use crate::services::websocket::run_ws_listener;
 use crate::types::config::Config;
-use crate::services::database::init_database;
 
 //-////////////////////////////////////////////////////////////////////////////
 //  Globals
 //-////////////////////////////////////////////////////////////////////////////
 
-#[dynamic]
+#[static_init::dynamic]
 static CONFIG: Config = Config::init();
 
 //-////////////////////////////////////////////////////////////////////////////
@@ -33,15 +39,28 @@ static CONFIG: Config = Config::init();
 //-////////////////////////////////////////////////////////////////////////////
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    // logger
+    // -- Logger --
     FmtSubscriber::builder()
         .with_max_level(CONFIG.debug_lvl)
         .init();
 
-    // database
-    let db = init_database().await.unwrap();
+    // -- Database --
+    info!("-- INIT DB --");
+    let mut options = match &CONFIG.postgres {
+        Some(pg_conf) => {
+            info!("Database: Postgres");
+            ConnectOptions::from(pg_conf.to_url())
+        },
+        None => {
+            info!("Database: in memory SQLite");
+            ConnectOptions::from("sqlite::memory:")
+        },
+    };
+    options.sqlx_logging_level(LevelFilter::Trace);
+    let db = Database::connect(options).await.unwrap();
+    Migrator::up(&db, None).await.unwrap();
 
-    // websocket
+    // -- Websocket --
     run_ws_listener(db).await;
 
     Ok(())

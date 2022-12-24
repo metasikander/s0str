@@ -13,7 +13,7 @@ COPY migration ./migration
 COPY Cargo.* ./
 
 RUN cargo build --release \
-   && rm target/release/* -rf
+    && rm target/release/deps/s0str* -f
 
 # - Compile ---
 COPY ./src/ ./src/

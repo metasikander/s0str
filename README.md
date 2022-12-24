@@ -14,4 +14,17 @@ The software will accept settings from a file or environmental variables, and be
 
 * filter on e and p tags
 * error response message when non pubkey user tries to post
-* setup postgresql support
+
+# Config
+
+Configuration is read from environment and `.env` file.
+
+* `debug_level`: `ERROR`, `WARN`, `INFO`(default), `DEBUG`, `TRACE`
+* `pg_host`: Postgres endpoint
+* `pg_pass`: Postgres password
+* `pg_user`: Postgres user
+* `pubkey`: The pubkey of the nostr user that can post (required)
+* `ws_ip`: IP interface to host ws on (default: 0.0.0.0)
+* `ws_port`: Port to host ws on (default: 8080)
+
+Note that non persistent in memory sqlite will be used unless postgres configurations is set.
