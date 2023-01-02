@@ -15,6 +15,9 @@ The software will accept settings from a file or environmental variables, and be
 * filter on e and p tags
 * error response message when non pubkey user tries to post
 
+## Nice to have
+* [Friend-of-a-Friend support](https://github.com/metasikander/s0str/issues/3) Save notes from more pubkeys, based on connection to main pubkey.
+
 # Config
 
 Configuration is read from environment and `.env` file.
